@@ -1,4 +1,6 @@
 # to access the .env
+import os
+
 from decouple import config
 import discord
 from discord.ext import commands
@@ -10,4 +12,4 @@ cogs = [music]
 for i in range(len(cogs)):
     cogs[i].setup(client)
 
-client.run(config('KEY'))
+client.run(os.getenv("DISCORD_TOKEN"))
