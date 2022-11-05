@@ -1,15 +1,15 @@
-# to access the .env
-import os
-
-from decouple import config
 import discord
 from discord.ext import commands
-import music
+import os
 
-client = commands.Bot(command_prefix='?', intents=discord.Intents.all())
+from help_cog import help_cog
+from music_cog import music_cog
 
-cogs = [music]
-for i in range(len(cogs)):
-    cogs[i].setup(client)
+bot = commands.Bot(command_prefix="/", intents=discord.Intents.all())
 
-client.run(os.getenv("DISCORD_TOKEN"))
+bot.remove_command('help')
+
+bot.add_cog(help_cog(bot))
+bot.add_cog(music_cog(bot))
+
+bot.run("MTAzODU2MTUyOTI0MDQ4NTk0MA.G_1N7y.0Gu86JX6Egb5T-u07vHqtg-XCIhnS_fLxG5SAU")
