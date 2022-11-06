@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 import youtube_dl
 
 # Discord bot Initialization
-client = discord.Client(intents=discord.Intents.all())
+client = discord.Client(command_prefix='!', intents=discord.Intents.all())
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 key = os.getenv("DISCORD_TOKEN")
 
@@ -32,6 +32,7 @@ ffmpeg_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
+
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source,volume)
@@ -50,5 +51,22 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return filename
 
 
+@bot.command(name='join', help='the bot joins the voice channel')
+async def join(ctx):
+    if not ctx.message.author.voice:
+        await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+        return
+    else:
+        channel = ctx.message.author.voice.channel
+    await channel.connect()
 
-client.run(key)
+
+@bot.command(name='leave', help='To make the bot leave the voice channel')
+async def leave(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_connected():
+        await voice_client.disconnect()
+    else:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+bot.run(key)
