@@ -71,19 +71,21 @@ async def leave(ctx):
         await ctx.send("The bot is not connected to a voice channel.")
 
 
+# TODO: make it so u can not only use links
 @bot.command(name='play', help='play song')
 async def play(ctx, url):
-    try:
-        server = ctx.message.guild
-        voice_channel = server.voice_client
+    ctx.voice_client.stop()
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                      'options': '-vn'}
+    YDL_OPTIONS = {'format': 'bestaudio/best'}
+    vc = ctx.voice_client
 
-        async with ctx.typing():
-            filename = await YTDLSource.from_url(url, loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
-        await ctx.send('**Now playing:** {}'.format(filename))
-
-    except:
-        await ctx.send("The bot is not connected to a voice channel.")
+    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(url, download=False)
+        print(info)
+        url2 = info['formats'][0]['url']
+        source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+        vc.play(source)
 
 
 @bot.command(name='pause', help='This command pauses the song')
@@ -103,6 +105,7 @@ async def resume(ctx):
     else:
         await ctx.send("The bot was not playing anything before this. Use play_song command")
 
+
 @bot.command(name='stop', help='Stops the song')
 async def stop(ctx):
     voice_client = ctx.message.guild.voice_client
@@ -110,5 +113,7 @@ async def stop(ctx):
         await voice_client.stop()
     else:
         await ctx.send("The bot is not playing anything at the moment.")
+
+
 # run the bot
 bot.run(key)
