@@ -94,5 +94,14 @@ async def pause(ctx):
     else:
         await ctx.send("The bot is not playing anything at the moment.")
 
+
+@bot.command(name='resume', help='Resumes the song')
+async def resume(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_paused():
+        await voice_client.resume()
+    else:
+        await ctx.send("The bot was not playing anything before this. Use play_song command")
+
 # run the bot
 bot.run(key)
