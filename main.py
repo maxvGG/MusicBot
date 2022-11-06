@@ -11,6 +11,9 @@ client = discord.Client(command_prefix='!', intents=discord.Intents.all())
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 key = os.getenv("DISCORD_TOKEN")
 
+# remove base help command
+bot.remove_command('help')
+
 youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
@@ -24,10 +27,6 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0'
-}
-
-ffmpeg_options = {
-    'options': '-vn'
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -82,7 +81,6 @@ async def play(ctx, url):
 
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
         info = ydl.extract_info(url, download=False)
-        print(info)
         url2 = info['formats'][0]['url']
         source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
         vc.play(source)
@@ -115,5 +113,14 @@ async def stop(ctx):
         await ctx.send("The bot is not playing anything at the moment.")
 
 
+@bot.command(name='help', help='show help message')
+async def help(ctx):
+    await ctx.send("""
+    ```
+    !join - let the bot join the vc
+    !play <link> - to play a song
+    !pause - pause the song
+    !resume - resume the song
+    !leave - let the bot leave the bot```""")
 # run the bot
 bot.run(key)
