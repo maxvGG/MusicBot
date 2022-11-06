@@ -35,7 +35,7 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source,volume)
+        super().__init__(source, volume)
         self.data = data
         self.title = data.get('title')
         self.url = ""
@@ -66,7 +66,25 @@ async def leave(ctx):
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_connected():
         await voice_client.disconnect()
+        return
     else:
         await ctx.send("The bot is not connected to a voice channel.")
 
+
+@bot.command(name='play', help='play song')
+async def play(ctx, url):
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+
+        async with ctx.typing():
+            filename = await YTDLSource.from_url(url, loop=bot.loop)
+            voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
+        await ctx.send('**Now playing:** {}'.format(filename))
+
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+# run the bot
 bot.run(key)
