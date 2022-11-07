@@ -1,5 +1,5 @@
 import asyncio
-
+import re
 import discord
 import os
 
@@ -7,9 +7,9 @@ from discord.ext import commands, tasks
 import youtube_dl
 
 # Discord bot Initialization
-client = discord.Client(command_prefix='!', intents=discord.Intents.all())
+client = discord.Client(intents=discord.Intents.all())
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-key = os.getenv("DISCORD_TOKEN")
+key = 'MTAzODUzNTg1MjM5NTA3MzU2OA.GtFc6e.kqWH_hQP3XlurSGt1aTHichhx4M_8gOFEyW9Zs'
 
 # remove base help command
 bot.remove_command('help')
@@ -70,20 +70,29 @@ async def leave(ctx):
         await ctx.send("The bot is not connected to a voice channel.")
 
 
-# TODO: make it so u can not only use links
+# TODO: haal de duplicatie uit de code
 @bot.command(name='play', help='play song')
-async def play(ctx, url):
+async def play(ctx, input):
     ctx.voice_client.stop()
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
                       'options': '-vn'}
     YDL_OPTIONS = {'format': 'bestaudio/best'}
     vc = ctx.voice_client
 
-    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-        info = ydl.extract_info(url, download=False)
-        url2 = info['formats'][0]['url']
-        source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-        vc.play(source)
+
+    if is_valid_url(input):
+        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+            info = ydl.extract_info(input, download=False)
+            url2 = info['formats'][0]['url']
+            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+            vc.play(source)
+    else:
+        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+            video = "ytsearch:" + input
+            info = ydl.extract_info(video, download=False)
+            url2 = info['formats'][0]['url']
+            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+            vc.play(source)
 
 
 @bot.command(name='pause', help='This command pauses the song')
@@ -122,5 +131,17 @@ async def help(ctx):
     !pause - pause the song
     !resume - resume the song
     !leave - let the bot leave the bot```""")
+
+def is_valid_url(url):
+    import re
+    regex = re.compile(
+        r'^https?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return url is not None and regex.search(url)
+
 # run the bot
 bot.run(key)
