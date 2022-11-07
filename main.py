@@ -9,8 +9,7 @@ import youtube_dl
 # Discord bot Initialization
 client = discord.Client(intents=discord.Intents.all())
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-key = 'MTAzODUzNTg1MjM5NTA3MzU2OA.GtFc6e.kqWH_hQP3XlurSGt1aTHichhx4M_8gOFEyW9Zs'
-
+key = os.getenv('DISCORD_KEY')
 # remove base help command
 bot.remove_command('help')
 
