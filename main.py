@@ -9,8 +9,9 @@ import youtube_dl
 # Discord bot Initialization
 client = discord.Client(intents=discord.Intents.all())
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-key = os.getenv('DISCORD_KEY')
+key = 'MTAzODUzNTg1MjM5NTA3MzU2OA.GroGal.Bd1lXyf8aF-w3lmXPQnZ5_KJ4RDi2gE7h5MVe4'
 # remove base help command
+# print(os.environ)
 bot.remove_command('help')
 
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -71,27 +72,39 @@ async def leave(ctx):
 
 # TODO: haal de duplicatie uit de code
 @bot.command(name='play', help='play song')
-async def play(ctx, input):
-    ctx.voice_client.stop()
-    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                      'options': '-vn'}
-    YDL_OPTIONS = {'format': 'bestaudio/best'}
-    vc = ctx.voice_client
+async def play(ctx, *video):
+    url = (" ").join(video)
+    try:
+        if not ctx.message.author.voice:
+            await ctx.send("please join a voice channel".format(ctx.message.author.name))
+            return
+        else:
+            channel = ctx.message.author.voice.channel
+        await channel.connect()
+        ctx.voice_client.stop()
 
+        FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                          'options': '-vn'}
+        YDL_OPTIONS = {'format': 'bestaudio/best'}
+        vc = ctx.voice_client
 
-    if is_valid_url(input):
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-            info = ydl.extract_info(input, download=False)
-            url2 = info['formats'][0]['url']
-            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-            vc.play(source)
-    else:
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-            video = "ytsearch:" + input
-            info = ydl.extract_info(video, download=False)
-            url2 = info['formats'][0]['url']
-            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-            vc.play(source)
+        if is_valid_url(url):
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                info = ydl.extract_info(url, download=False)
+                url2 = info['formats'][0]['url']
+                source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+                vc.play(source)
+                return
+        else:
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                video = "ytsearch:" + url
+                info = ydl.extract_info(video, download=False)
+                url2 = info['entries'][0]['url']
+                source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+                vc.play(source)
+                return
+    except:
+        await ctx.send("i cannot play a song right now")
 
 
 @bot.command(name='pause', help='This command pauses the song')
@@ -126,10 +139,11 @@ async def help(ctx):
     await ctx.send("""
     ```
     !join - let the bot join the vc
-    !play <link> - to play a song
+    !play <keywords/ url> - to play a song
     !pause - pause the song
     !resume - resume the song
     !leave - let the bot leave the bot```""")
+
 
 def is_valid_url(url):
     import re
@@ -137,10 +151,11 @@ def is_valid_url(url):
         r'^https?://'  # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
         r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return url is not None and regex.search(url)
+
 
 # run the bot
 bot.run(key)
